@@ -156,7 +156,7 @@ def import_reference(
     output = Path(output).absolute()
     if output.exists():
         raise InputError(f"bundle already exists: {output}")
-    if not str(taxid).isdigit() or int(taxid) <= 0:
+    if taxid is not None and (not str(taxid).isdigit() or int(taxid) <= 0):
         raise InputError("taxid must be a positive NCBI taxonomy ID")
     if not assembly.strip():
         raise InputError("assembly identifier is required")
@@ -187,7 +187,7 @@ def import_reference(
                 build_annotation(stage / "annotation.txt", db, lengths)
         manifest = {
             "schema_version": 1,
-            "taxid": str(taxid),
+            "taxid": str(taxid) if taxid is not None else None,
             "assembly": assembly,
             "annotation_release": annotation_release,
             "source": source,

@@ -1,0 +1,16 @@
+# Online reference workflow implementation plan
+
+Goal: Support lightweight NCBI assembly-pinned sequence/region annotation retrieval and optional online BLAST without storing a full genome. Deliver a complete installation-to-results manual without changelog/process narration.
+Architecture: Keep existing template-only and local modes. Add NCBI assembly/sequence-report metadata, bounded E-utilities region/Gene-ID retrieval with checksum cache, and batched remote BLAST with assembly-contig filtering and explicit limited-search statuses. CLI --assembly selects online mode; local --reference remains separate.
+
+Constraints: Versioned GCF_/GCA_ assemblies and versioned nucleotide accessions only; never assume a species filter is assembly-exhaustive. Only documented GET transport is retried automatically; never silently resubmit BLAST POST. Enforce NCBI rates (E-utils <=3/s; BLAST requests >=10 s and RID polling >=60 s), timeout and query/hit caps. Unavailable annotations, unmatched assembly gene coordinates, missing database coverage and truncation are recorded as limitations/errors, not passes. No claim of universal species support or experimental specificity.
+
+- [x] RED/GREEN: online_reference.py assembly metadata + paginated sequence reports, exact alias mapping, EFetch bounded GenBank intervals and local/global annotation coordinates, NCBI Gene IDs restricted to requested assembly. Test mixed versions, ambiguous aliases, pagination, failed fetch/cache corruption, strand mapping and byte/region caps.
+- [x] RED/GREEN: remote_blast.py NCBI URLAPI submission/polling, raw XML parsing, full-primer extension from EFetch, L/R amplicon pairing both strands, unknown-version and saturated-hit limited statuses. Test waiting/failed/timeout responses, negative HSP orientation, excluded contigs, incomplete per-query results, known off-target and expected-not-found cases.
+- [x] RED/GREEN: wire --assembly, --specificity remote, rate settings and batched workflow into CLI/workflow/exporters. Export online reference, region annotations and candidate review tiers; existing local modes remain compatible.
+- [x] Reorganize README and focused manuals as a complete workflow: installation, directory layout, input preparation, three modes, NCBI search/assembly inspect/target retrieval/full download options, output interpretation and troubleshooting. Remove migration/update/review narrative from user-facing manuals. Add region and Gene-ID example inputs.
+- [x] Full suite, local documented commands, distribution checks and independent review; retry live only after network changes. Push authorized feature branch. Record actual network limitations separately from functional docs.
+
+Evidence: Official NCBI datasets.openapi.yaml from ncbi/datasets/master confirms /genome/accession/{accession}/sequence_reports with pagination. API/EFetch/BLAST hosts are blocked by current proxy; additive host requirements saved in environment draft, not yet applied/published.
+
+Execution: 77/77 tests passed; independent findings fixed with regressions; 0.3.0 install/distribution and local CLI verified. Live NCBI access is externally blocked by unchanged network policy; online mode is experimental and the limitation is explicit in the manuals. GitHub delivery is to the authorized feature/primer-workflow branch; remote outcome is reported in chat.
