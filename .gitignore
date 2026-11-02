@@ -1,0 +1,13 @@
+.venv/
+*.egg-info/
+__pycache__/
+.DS_Store
+primer_results.csv
+
+
+references/
+runs/
+dist/
+build/
+*.zip
+.superpowers/

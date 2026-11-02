@@ -1,0 +1,2 @@
+recursive-include examples *.fa *.fasta *.csv *.gff3 *.bed *.txt *.json
+recursive-include docs *.md
