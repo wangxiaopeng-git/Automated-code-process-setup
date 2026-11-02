@@ -13,6 +13,7 @@ from .core import InputError, RecordIssue, _blank_result, design_record, validat
 from .exporters import export_report
 from .reference import sha256
 from .specificity import check_pair
+from . import __version__
 
 
 def thermo(row, config):
@@ -51,6 +52,8 @@ def run_design(
     max_product=2000,
     max_mismatches=2,
     provenance=None,
+    remote_checker=None,
+    reference_metadata=None,
 ):
     config.validate()
     targets = list(targets)
@@ -59,9 +62,11 @@ def run_design(
         raise InputError("input contains no targets")
     if output.exists():
         raise InputError("output exists; choose a new run directory")
-    if specificity != "none" and bundle is None:
+    if specificity in {"exact", "blast"} and bundle is None:
         raise InputError("specificity requires a reference bundle")
-    if specificity not in {"none", "exact", "blast"}:
+    if specificity == "remote" and remote_checker is None:
+        raise InputError("remote specificity requires an online checker")
+    if specificity not in {"none", "exact", "blast", "remote"}:
         raise InputError("specificity must be none/exact/blast")
     if max_product < config.product_max_size:
         raise InputError("specificity max_product must cover design product maximum")
@@ -120,7 +125,7 @@ def run_design(
                                 side + "_genomic_strand": strand,
                             }
                         )
-                if specificity != "none":
+                if specificity in {"exact", "blast"}:
                     try:
                         row.update(
                             check_pair(
@@ -140,17 +145,62 @@ def run_design(
                         )
                         checked_errors += 1
             rows.append(row)
+    if specificity == "remote":
+        try:
+            checked = remote_checker.check(
+                rows, targets, max_product=max_product, max_mismatches=max_mismatches
+            )
+            for row in rows:
+                if row["status"] == "ok":
+                    row.update(checked[(row["record_id"], row["pair_rank"])])
+                    checked_errors += int(
+                        row["specificity_status"] == "incomplete_remote"
+                    )
+        except (InputError, KeyError) as exc:
+            for row in rows:
+                if row["status"] == "ok":
+                    row.update(
+                        specificity_status="error",
+                        specificity_method="remote",
+                        specificity_error=str(exc),
+                    )
+                    checked_errors += 1
+    for row in rows:
+        status = row["specificity_status"]
+        row["screening_priority"] = (
+            "off_target_risk"
+            if status.startswith("multiple_products")
+            else (
+                "review_local_single"
+                if status in {"single_product_exact", "single_product_blast"}
+                else (
+                    "review_online_limited"
+                    if status == "single_product_remote_limited"
+                    else (
+                        "unconfirmed_target"
+                        if "unassigned" in status
+                        or "not_found" in status
+                        or "no_product_found" in status
+                        else (
+                            "check_incomplete"
+                            if status in {"error", "incomplete_remote"}
+                            else "not_checked"
+                        )
+                    )
+                )
+            )
+        )
     report = {
         "schema_version": 1,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "software": {
             "python": platform.python_version(),
             "primer3-py": version("primer3-py"),
-            "batch-primer-designer": "0.2.0",
+            "batch-primer-designer": __version__,
         },
         "parameters": asdict(config),
         "provenance": provenance or {},
-        "reference": bundle.manifest if bundle else None,
+        "reference": bundle.manifest if bundle else reference_metadata,
         "summary": {
             "input_records": len(targets),
             "successful_records": success,

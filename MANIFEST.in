@@ -4,3 +4,8 @@ recursive-include docs *.md
 
 # Generated references must never be bundled with the teaching examples.
 prune data/examples/.primer-cache
+prune data/examples/.ncbi-cache
+
+# Maintainer records are not part of the distributed user manual.
+prune docs/development
+prune docs/superpowers

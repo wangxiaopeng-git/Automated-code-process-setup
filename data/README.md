@@ -6,3 +6,5 @@
 - 有本地参考时追加 `--reference data/project1/genome.fa`，可再追加 `--gtf data/project1/genes.gtf` 或 `--gff data/project1/genes.gff3`。不需要手动建立参考包；默认自动用 BLAST 检查特异性。
 - 不需要事先建立结果目录，程序会生成 `results/project1/`；如果它已存在，请换新名字，例如 `results/project1_run2`。
 - 用户项目数据和隐藏的 `.primer-cache/` 不会默认提交到 Git。仅 `data/examples/` 与本说明随代码分发。
+
+- 在线模式可以用 `--assembly GCF_000005845.2` 代替本地 `--reference`，按版本获取目标区域或在线筛查。输入 BED/数字 NCBI Gene ID 时只获取小范围序列和可用注释；缓存位于项目 `.ncbi-cache/`。在线覆盖范围有限，不能当作完整本地参考验证。

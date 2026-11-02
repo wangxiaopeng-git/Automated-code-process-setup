@@ -1,6 +1,6 @@
 # 教学示例：先运行，再照着准备自己的输入
 
-本目录是原 `examples/` 目录的新位置。所有序列用于演示软件，不代表真实物种实验结论。建议不要直接改这里的文件，复制到 `data/project1` 后再编辑。下面命令都从**仓库根目录**执行，且每次使用不同的结果目录。
+本目录提供可以运行的模板和输入格式。所有序列用于演示软件，不代表真实物种实验结论。建议不要直接改这里的文件，复制到 `data/project1` 后再编辑。下面命令都从**仓库根目录**执行，且每次使用不同的结果目录。
 
 ## 各个文件是什么
 
@@ -17,6 +17,8 @@
 | `synthetic.gff3` | 对应参考中的两个短目标 | 必须与参考序列配套；真实项目使用同一组装注释 |
 | `genes.txt` | 注释中存在的 target_plus、target_minus ID | 每行一个在你注释中确实存在的 ID |
 | `targets.bed` | 上述小参考中的两个目标区间 | 按自己的参考坐标填写，注意坐标规则 |
+| `ncbi-targets.bed` | GCF_000005845.2 / NC_000913.3 的短区间格式示例 | 在线使用，替换为自己组装上的区间 |
+| `ncbi-genes.txt` | 数字 NCBI Gene ID 示例 945006 | 在线使用，必须能匹配所选组装版本 |
 
 ## 不同模板格式的运行命令
 
@@ -88,3 +90,20 @@ primer-workflow design data/examples/input.fasta --config data/examples/design-c
 ```
 
 每个输出目录中可先查看 `report.html` 和 `results.xlsx`；完整参数与特异性信息在 `results.json`。
+
+## 按 NCBI 组装版本在线使用
+
+这些命令需要能访问 NCBI，不下载整个基因组；不同于上面的人工参考示例。
+
+```bash
+# 查看组装信息，不下载整个基因组
+primer-workflow reference inspect --assembly GCF_000005845.2
+
+# 获取目标附近的序列和区域注释，先不提交在线 BLAST
+primer-workflow design data/examples/ncbi-targets.bed --assembly GCF_000005845.2 --specificity none -o results/example_ncbi_regions
+
+# 获取目标附近的序列，并提交少量候选到 NCBI 做在线有限范围筛查
+primer-workflow design data/examples/ncbi-targets.bed --assembly GCF_000005845.2 --num-return 2 -o results/example_ncbi_screen
+```
+
+不能把 `ncbi-targets.bed` 与 `synthetic-genome.fa` 混用，也不能把本地示例的 `target_plus` 当成数字 NCBI Gene ID。在线得到的单一产物不证明全组装已被搜索，状态会带 `remote_limited`。完整流程见仓库首页的场景三。

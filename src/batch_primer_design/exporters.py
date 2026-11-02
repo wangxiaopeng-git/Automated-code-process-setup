@@ -43,6 +43,53 @@ def export_report(report, output):
         json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False),
         encoding="utf-8",
     )
+    if (report.get("reference") or {}).get("provider") == "NCBI":
+        (output / "online_reference.json").write_text(
+            json.dumps(report["reference"], ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        regions = report["reference"].get("regions", [])
+        if regions:
+            (output / "online_templates.fasta").write_text(
+                "".join(
+                    f">online_target{i} sample={str(r['sample_id']).replace(chr(10),' ')} {r['contig']}:{r['start_0based']}-{r['end_exclusive']} strand={r['strand']}\n{r['template_sequence_5to3']}\n"
+                    for i, r in enumerate(regions, 1)
+                ),
+                encoding="utf-8",
+            )
+            with (output / "region_features.tsv").open(
+                "w", encoding="utf-8-sig", newline=""
+            ) as handle:
+                writer = csv.writer(handle, delimiter="\t")
+                writer.writerow(
+                    [
+                        "sample_id",
+                        "contig",
+                        "feature_type",
+                        "part_index",
+                        "start_1based",
+                        "end_1based",
+                        "strand",
+                        "qualifiers_json",
+                        "location_in_fetched_record",
+                    ]
+                )
+                for r in regions:
+                    for f in r["features"]:
+                        for i, part in enumerate(f["parts"], 1):
+                            writer.writerow(
+                                [
+                                    spreadsheet_safe(str(r["sample_id"])),
+                                    r["contig"],
+                                    f["type"],
+                                    i,
+                                    part["start_0based"] + 1,
+                                    part["end_exclusive"],
+                                    part["strand"],
+                                    json.dumps(f["qualifiers"], ensure_ascii=False),
+                                    f["location_in_fetched_record"],
+                                ]
+                            )
     primers = []
     amplicons = []
     bed = []
@@ -81,6 +128,7 @@ def export_report(report, output):
         "pair_rank",
         "status",
         "specificity_status",
+        "screening_priority",
         "left_sequence_5to3",
         "right_sequence_5to3",
         "product_size_bp",

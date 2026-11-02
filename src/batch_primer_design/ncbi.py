@@ -28,7 +28,7 @@ def session():
         respect_retry_after_header=True,
     )
     client.mount("https://", HTTPAdapter(max_retries=retry))
-    client.headers["User-Agent"] = "batch-primer-designer/0.2.0"
+    client.headers["User-Agent"] = "batch-primer-designer/0.3.0"
     return client
 
 
