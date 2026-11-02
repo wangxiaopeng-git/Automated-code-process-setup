@@ -11,3 +11,10 @@ dist/
 build/
 *.zip
 .superpowers/
+
+# Keep shipped examples; ignore private project inputs, caches and results.
+data/*
+!data/examples/
+!data/README.md
+results/
+.primer-cache/

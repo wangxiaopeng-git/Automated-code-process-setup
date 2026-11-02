@@ -1,2 +1,6 @@
-recursive-include examples *.fa *.fasta *.csv *.gff3 *.bed *.txt *.json
+recursive-include data/examples *.fa *.fasta *.csv *.tsv *.xlsx *.gb *.gff3 *.bed *.txt *.json *.md
+include data/README.md
 recursive-include docs *.md
+
+# Generated references must never be bundled with the teaching examples.
+prune data/examples/.primer-cache

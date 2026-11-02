@@ -1,0 +1,30 @@
+LOCUS       gene_A                   195 bp    DNA              UNK 01-JAN-1980
+DEFINITION  gene_A.
+ACCESSION   gene_A
+VERSION     gene_A
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+ORIGIN
+        1 acgttgcaag tcgatcgtac gatcggctag ctaggctagc tacgatcgat cgtacgatcg
+       61 atgctagcta ggatcgatcg tacgtagcta gctgactgat cgatcgtagc tagctacgta
+      121 gctgatcgta gctagctacg atcgtagctg actgatcgat cgtagctagc tgactgatcg
+      181 atcgtagcta gctag
+//
+LOCUS       gene_B                   195 bp    DNA              UNK 01-JAN-1980
+DEFINITION  gene_B.
+ACCESSION   gene_B
+VERSION     gene_B
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+ORIGIN
+        1 gctagctagg atccgatcga tgctagctac gatcgtagct agctgactga tcgatcgtag
+       61 ctagctacgt agctgatcgt agctagctac gatcgtagct gactgatcga tcgtagctag
+      121 ctgactgatc gatcgtagct agctagctag gctacgtagc tagctgatcg atcgtagcta
+      181 gctagctgac tgatc
+//

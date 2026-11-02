@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse
 import json
+import shutil
 import sys
 from contextlib import ExitStack
 from dataclasses import fields
@@ -23,8 +24,27 @@ def parser():
         "design", help="design candidates and export a complete run directory"
     )
     design.add_argument("input", type=Path)
-    design.add_argument("-o", "--output", type=Path, required=True)
-    design.add_argument("--reference", type=Path)
+    design.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output directory; default: results/<input project folder>",
+    )
+    design.add_argument(
+        "--reference",
+        type=Path,
+        help="Genome FASTA(.gz) file, or an existing reference bundle",
+    )
+    annotation = design.add_mutually_exclusive_group()
+    annotation.add_argument(
+        "--gtf", type=Path, help="Matching GTF annotation (optional for sequence input)"
+    )
+    annotation.add_argument("--gff", type=Path, help="Matching GFF/GFF3 annotation")
+    design.add_argument(
+        "--cache-dir",
+        type=Path,
+        help="Reference cache; default: .primer-cache inside the input project folder",
+    )
     design.add_argument("--flank", type=int, default=300)
     design.add_argument(
         "--config",
@@ -32,7 +52,10 @@ def parser():
         help="JSON object with DesignConfig fields, concentrations in mM/nM",
     )
     design.add_argument(
-        "--specificity", choices=["none", "exact", "blast"], default="none"
+        "--specificity",
+        choices=["none", "exact", "blast"],
+        default=None,
+        help="Default: blast with --reference, none without --reference",
     )
     design.add_argument("--specificity-max-product", type=int, default=2000)
     design.add_argument("--max-mismatches", type=int, default=2)
@@ -105,6 +128,18 @@ def main(argv=None):
                 )
             print(json.dumps(result, indent=2, ensure_ascii=False))
             return 0
+        if (args.gtf or args.gff) and not args.reference:
+            raise InputError("--gtf/--gff requires --reference genome FASTA")
+        args.specificity = args.specificity or ("blast" if args.reference else "none")
+        if args.specificity != "none" and not args.reference:
+            raise InputError("Specificity checking requires --reference genome FASTA")
+        if args.specificity == "blast" and not shutil.which("blastn"):
+            raise InputError(
+                "BLAST+ is required for reference specificity checking. Install ncbi-blast+ (Linux), brew install blast (macOS), or the official Windows BLAST+ package; run blastn -version to verify. Use --specificity exact only for references <=5 Mb; --specificity none explicitly skips checking."
+            )
+        args.output = args.output or Path("results") / (
+            args.input.resolve().parent.name or args.input.stem
+        )
         settings = json.loads(args.config.read_text()) if args.config else {}
         if not isinstance(settings, dict):
             raise InputError("config must be a JSON object")
@@ -116,11 +151,17 @@ def main(argv=None):
         config = DesignConfig(**settings)
         config.validate()
         with ExitStack() as stack:
-            bundle = (
-                stack.enter_context(ReferenceBundle(args.reference))
-                if args.reference
-                else None
-            )
+            bundle = None
+            if args.reference:
+                from .auto_reference import prepare_reference
+
+                reference_path = prepare_reference(
+                    args.reference,
+                    args.gtf or args.gff,
+                    cache_dir=args.cache_dir
+                    or args.input.resolve().parent / ".primer-cache",
+                )
+                bundle = stack.enter_context(ReferenceBundle(reference_path))
             if bundle:
                 bundle.verify()
             kind = file_kind(args.input)
@@ -154,6 +195,10 @@ def main(argv=None):
                 "input_sha256": sha256(args.input),
                 "coordinate_convention": "template 1-based closed; reference/BED 0-based half-open",
                 "flank_bp": args.flank,
+                "reference_input": str(args.reference) if args.reference else None,
+                "annotation_input": (
+                    str(args.gtf or args.gff) if (args.gtf or args.gff) else None
+                ),
                 "mode": "genomic PCR; gene/transcript IDs target their full genomic span",
             }
             report = run_design(

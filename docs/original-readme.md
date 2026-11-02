@@ -55,13 +55,13 @@ batch-primer-gui
 使用默认设置（引物 18–25 nt、Tm 57–63°C、产物 100–300 bp，每个样本最多 5 对）：
 
 ```bash
-batch-primer-design examples/input.csv -o primer_results.csv
+batch-primer-design data/examples/input.csv -o primer_results.csv
 ```
 
 常见的参数调整：
 
 ```bash
-batch-primer-design examples/input.fasta \
+batch-primer-design data/examples/input.fasta \
   -o primer_results.csv \
   --num-return 3 \
   --primer-min-tm 58 \
