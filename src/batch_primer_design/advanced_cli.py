@@ -12,6 +12,7 @@ from .core import DesignConfig, InputError, RecordIssue
 from .inputs import file_kind, load_templates, open_text
 from .reference import ReferenceBundle, Target, import_reference, sha256
 from .workflow import run_design
+from . import __version__
 
 
 def parser():
@@ -19,6 +20,7 @@ def parser():
         prog="primer-workflow",
         description="Multi-format genomic PCR primer design and reference management",
     )
+    p.add_argument("--version", action="version", version="%(prog)s " + __version__)
     commands = p.add_subparsers(dest="command", required=True)
     design = commands.add_parser(
         "design", help="design candidates and export a complete run directory"

@@ -74,6 +74,9 @@ python -m pip install -e .
 
 # 确认命令安装成功；会显示可用命令和参数说明
 primer-workflow --help
+
+# 核对当前实际运行的程序版本
+primer-workflow --version
 ```
 
 ### Windows PowerShell
@@ -98,6 +101,9 @@ python -m pip install -e .
 
 # 显示帮助，确认安装完成
 primer-workflow --help
+
+# 核对当前实际运行的程序版本
+primer-workflow --version
 ```
 
 如果 PowerShell 不允许激活脚本，可以直接使用 `.\.venv\Scripts\python.exe -m pip install -e .` 安装；后续把 `primer-workflow` 替换成 `.\.venv\Scripts\primer-workflow.exe` 即可。下面设计命令都写成一行，Windows 也可以直接使用。
@@ -374,6 +380,7 @@ Gene ID 示例 `945006` 需要在线元数据能够将该基因的坐标明确�
 
 | 提示/现象 | 怎么处理 |
 |---|---|
+| `unrecognized arguments: --gff/--assembly` 或没有 `inspect` | 实际加载了旧版 CLI；按 [安装与命令路径排查](docs/install-troubleshooting.md) 核对版本和源码路径 |
 | `primer-workflow: command not found` | 回到仓库目录激活 `.venv`，确认执行过安装命令 |
 | 找不到 `data/project1/...` | 确认终端当前在仓库根目录，文件名和后缀与命令一致 |
 | `output exists` | 换新输出目录，例如 `-o results/project1_run2`，保留旧结果 |
