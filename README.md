@@ -9,7 +9,7 @@
 以后每个实验项目建一个文件夹。`project1` 只是示范名字，可以换成 `rice_geneA`、`mouse_pcr` 等，建议使用英文字母、数字和下划线。
 
 ```text
-Automated-code-process-setup/       ← 下载下来的整个代码文件夹（仓库根目录）
+Batch-primer-design-workflow/       ← 下载下来的整个代码文件夹（仓库根目录）
 ├── data/
 │   ├── examples/                  ← 软件附带的示例，不需要自己准备
 │   │   ├── single.fasta           ← 只有一条序列，适合第一次练习
@@ -46,10 +46,10 @@ python3 --version
 
 # 首次下载本项目；当前改进版位于 feature/primer-workflow 分支
 # 如果已经下载过，就跳过 clone，直接进入已有的代码文件夹
-git clone --branch feature/primer-workflow https://github.com/wangxiaopeng-git/Automated-code-process-setup.git
+git clone --branch feature/primer-workflow https://github.com/wangxiaopeng-git/Batch-primer-design-workflow.git
 
 # 进入仓库根目录；后续所有相对路径都以这里为起点
-cd Automated-code-process-setup
+cd Batch-primer-design-workflow
 
 # 创建独立的 Python 环境，避免与其他项目的软件包混在一起
 python3 -m venv .venv
@@ -72,10 +72,10 @@ primer-workflow --help
 
 ```powershell
 # 下载代码；已经下载过就跳过这一行
-git clone --branch feature/primer-workflow https://github.com/wangxiaopeng-git/Automated-code-process-setup.git
+git clone --branch feature/primer-workflow https://github.com/wangxiaopeng-git/Batch-primer-design-workflow.git
 
 # 进入仓库根目录
-cd Automated-code-process-setup
+cd Batch-primer-design-workflow
 
 # 使用 Python 3.12 创建独立环境
 py -3.12 -m venv .venv
