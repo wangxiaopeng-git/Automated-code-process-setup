@@ -82,8 +82,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    ok_samples = len({row["sample_id"] for row in rows if row["status"] == "ok"})
-    failed_samples = len({row["sample_id"] for row in rows if row["status"] != "ok"})
+    ok_samples = len({row["record_id"] for row in rows if row["status"] == "ok"})
+    failed_samples = len({row["record_id"] for row in rows if row["status"] != "ok"})
     print(
         f"done: {ok_samples} sample(s) with primers, "
         f"{failed_samples} failed; output: {args.output}"
@@ -93,4 +93,3 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

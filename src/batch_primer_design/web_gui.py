@@ -250,9 +250,11 @@ def _design(payload: Dict[str, Any]) -> Dict[str, Any]:
     stream = io.StringIO(newline="")
     writer = csv.DictWriter(stream, fieldnames=RESULT_FIELDS)
     writer.writeheader()
-    writer.writerows(rows)
-    success_ids = {row["sample_id"] for row in rows if row["status"] == "ok"}
-    failed_ids = {row["sample_id"] for row in rows if row["status"] != "ok"}
+    from .exporters import spreadsheet_safe
+
+    writer.writerows({k: spreadsheet_safe(v) for k, v in row.items()} for row in rows)
+    success_ids = {row["record_id"] for row in rows if row["status"] == "ok"}
+    failed_ids = {row["record_id"] for row in rows if row["status"] != "ok"}
     return {
         "ok": True,
         "total": len(records),
@@ -307,9 +309,15 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Start the local primer design web GUI")
-    parser.add_argument("--port", type=int, default=0, help="local port; 0 chooses a free port")
-    parser.add_argument("--no-browser", action="store_true", help="do not open a browser")
+    parser = argparse.ArgumentParser(
+        description="Start the local primer design web GUI"
+    )
+    parser.add_argument(
+        "--port", type=int, default=0, help="local port; 0 chooses a free port"
+    )
+    parser.add_argument(
+        "--no-browser", action="store_true", help="do not open a browser"
+    )
     return parser
 
 
@@ -332,4 +340,3 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

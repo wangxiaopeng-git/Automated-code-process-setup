@@ -5,7 +5,17 @@ import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Union,
+)
 
 
 DNA_RE = re.compile(r"^[ACGTN]+$")
@@ -51,7 +61,17 @@ class DesignConfig:
     pick_anyway: bool = False
 
     def validate(self) -> None:
-        for name in ("primer_min_tm", "primer_opt_tm", "primer_max_tm", "primer_min_gc", "primer_max_gc", "salt_monovalent_mm", "salt_divalent_mm", "dntp_mm", "primer_dna_nm"):
+        for name in (
+            "primer_min_tm",
+            "primer_opt_tm",
+            "primer_max_tm",
+            "primer_min_gc",
+            "primer_max_gc",
+            "salt_monovalent_mm",
+            "salt_divalent_mm",
+            "dntp_mm",
+            "primer_dna_nm",
+        ):
             if not math.isfinite(getattr(self, name)):
                 raise InputError(f"{name} must be finite")
         for name in ("salt_monovalent_mm", "salt_divalent_mm", "dntp_mm"):
@@ -63,7 +83,9 @@ class DesignConfig:
             raise InputError("num_return must be <= 100")
         if self.num_return < 1:
             raise InputError("num_return must be >= 1")
-        if not (1 <= self.primer_min_size <= self.primer_opt_size <= self.primer_max_size):
+        if not (
+            1 <= self.primer_min_size <= self.primer_opt_size <= self.primer_max_size
+        ):
             raise InputError("primer sizes must satisfy 1 <= min <= opt <= max")
         if not (self.primer_min_tm <= self.primer_opt_tm <= self.primer_max_tm):
             raise InputError("primer Tm values must satisfy min <= opt <= max")
@@ -105,6 +127,7 @@ class DesignConfig:
 
 
 RESULT_FIELDS = [
+    "record_id",
     "sample_id",
     "pair_rank",
     "left_sequence_5to3",
@@ -179,7 +202,9 @@ def read_delimited(path: Path) -> Iterator[Union[TemplateRecord, RecordIssue]]:
         required = {"id", "sequence"}
         missing = required - set(reader.fieldnames)
         if missing:
-            raise InputError("input table is missing column(s): " + ", ".join(sorted(missing)))
+            raise InputError(
+                "input table is missing column(s): " + ", ".join(sorted(missing))
+            )
         for line_number, row in enumerate(reader, start=2):
             sample_id = (row.get("id") or "").strip() or f"line_{line_number}"
             try:
@@ -221,7 +246,9 @@ def read_fasta(path: Path) -> Iterator[Union[TemplateRecord, RecordIssue]]:
                 sequence_lines = []
             else:
                 if header is None:
-                    raise InputError(f"line {line_number}: sequence appears before FASTA header")
+                    raise InputError(
+                        f"line {line_number}: sequence appears before FASTA header"
+                    )
                 sequence_lines.append(line)
     if header is None:
         raise InputError("FASTA input contains no records")
@@ -276,7 +303,9 @@ def design_record(
         return [_blank_result(record.sample_id, "error", str(result["PRIMER_ERROR"]))]
     pair_count = int(result.get("PRIMER_PAIR_NUM_RETURNED", 0) or 0)
     if pair_count == 0:
-        return [_blank_result(record.sample_id, "no_pair", _message_from_result(result))]
+        return [
+            _blank_result(record.sample_id, "no_pair", _message_from_result(result))
+        ]
 
     rows: List[Dict[str, Any]] = []
     for index in range(pair_count):
@@ -318,15 +347,17 @@ def design_batch(
     engine: Callable[..., Dict[str, Any]],
 ) -> Iterator[Dict[str, Any]]:
     seen = set()
-    for record in records:
+    for record_id, record in enumerate(records, 1):
         if isinstance(record, RecordIssue):
-            yield _blank_result(record.sample_id, "error", record.message)
-            continue
-        if record.sample_id in seen:
-            yield _blank_result(record.sample_id, "error", "duplicate sample id")
-            continue
-        seen.add(record.sample_id)
-        yield from design_record(record, config, engine)
+            rows = [_blank_result(record.sample_id, "error", record.message)]
+        elif record.sample_id in seen:
+            rows = [_blank_result(record.sample_id, "error", "duplicate sample id")]
+        else:
+            seen.add(record.sample_id)
+            rows = design_record(record, config, engine)
+        for row in rows:
+            row["record_id"] = record_id
+            yield row
 
 
 def write_results(rows: Sequence[Dict[str, Any]], output_path: Path) -> None:
@@ -334,5 +365,8 @@ def write_results(rows: Sequence[Dict[str, Any]], output_path: Path) -> None:
     with output_path.open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=RESULT_FIELDS)
         writer.writeheader()
-        writer.writerows(rows)
+        from .exporters import spreadsheet_safe
 
+        writer.writerows(
+            {k: spreadsheet_safe(v) for k, v in row.items()} for row in rows
+        )

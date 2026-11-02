@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "batch-primer-designer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Batch PCR primer design powered by Primer3"
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = ["primer3-py==2.4.0"]
+requires-python = ">=3.10"
+dependencies = ["primer3-py==2.4.0", "biopython==1.85", "openpyxl==3.1.5", "requests==2.32.5"]
 
 [project.scripts]
+primer-workflow = "batch_primer_design.advanced_cli:main"
 batch-primer-design = "batch_primer_design.cli:main"
 batch-primer-gui = "batch_primer_design.web_gui:main"
 
