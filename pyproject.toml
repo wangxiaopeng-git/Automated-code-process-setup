@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "batch-primer-designer"
+version = "0.1.0"
+description = "Batch PCR primer design powered by Primer3"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["primer3-py==2.4.0"]
+
+[project.scripts]
+batch-primer-design = "batch_primer_design.cli:main"
+batch-primer-gui = "batch_primer_design.web_gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
